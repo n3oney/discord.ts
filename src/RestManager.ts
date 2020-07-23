@@ -38,6 +38,24 @@ export default class RestManager {
         });
     }
 
+    public put(path: string, body: any = {}, headers: any = {}): Promise<Response> {
+        return new Promise(async (resolve, reject) => {
+            fetch(this.base + path, {
+                method: "PUT",
+                body: JSON.stringify(body),
+                headers: {
+                    Authorization: this.token,
+                    "Content-Type": "application/json",
+                    ...headers
+                }
+            }).then(async res => {
+                resolve(res);
+            }, e => {
+                reject(e);
+            })
+        });
+    }
+
     constructor(token: string) {
         this.token = token;
     }
