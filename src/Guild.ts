@@ -1,6 +1,5 @@
 import Client from "./Client.ts";
 import {Snowflake} from "./Snowflake.ts";
-import { Snowflake } from "./Snowflake";
 
 export interface GuildOptions {
     client: Client;
@@ -62,11 +61,11 @@ export default class Guild {
         return new Promise(async (resolve, reject) => {
             if(!this.client.restManager) return reject(new Error("Client isn't connected."));
             this.client.restManager.put("/guilds/" + this.id + "/bans/" + id, {
-                delete_message_days, reason
+                deleteMessageDays, reason
             }).then(async response => {
                 if(response.status === 200) {
 
-                    resolve(this);
+                    resolve();
                 } else reject();
             }, e => reject(e));
         })
