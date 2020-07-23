@@ -56,6 +56,8 @@ export default class Guild {
     public verificationLevel?: number;
     public roles?: any[];
 
+    // TODO: Add ban(id: Snowflake) https://discord.com/developers/docs/resources/guild#create-guild-ban
+
     public setName(name: string): Promise<Guild> {
         return new Promise(async (resolve, reject) => {
             if(!this.client.restManager) return reject(new Error("Client isn't connected."));
