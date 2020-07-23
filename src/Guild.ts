@@ -1,5 +1,6 @@
 import Client from "./Client.ts";
 import {Snowflake} from "./Snowflake.ts";
+import { Snowflake } from "./Snowflake";
 
 export interface GuildOptions {
     client: Client;
@@ -57,6 +58,19 @@ export default class Guild {
     public roles?: any[];
 
     // TODO: Add ban(id: Snowflake) https://discord.com/developers/docs/resources/guild#create-guild-ban
+    public ban(id: Snowflake, deleteMessageDays = 0, reason = " "): Promise<void> {
+        return new Promise(async (resolve, reject) => {
+            if(!this.client.restManager) return reject(new Error("Client isn't connected."));
+            this.client.restManager.put("/guilds/" + this.id + "/bans/" + id, {
+                delete_message_days, reason
+            }).then(async response => {
+                if(response.status === 200) {
+
+                    resolve(this);
+                } else reject();
+            }, e => reject(e));
+        })
+    }
 
     public setName(name: string): Promise<Guild> {
         return new Promise(async (resolve, reject) => {
