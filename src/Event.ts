@@ -3,7 +3,8 @@ import Client from "./Client.ts";
 export enum Event {
     Message = "onMessage",
     Ready = "onReady",
-    Raw = "onRaw"
+    Raw = "onRaw",
+    GuildCreate = "onGuildCreate"
 }
 
 export function event(event: Event) {
@@ -11,7 +12,8 @@ export function event(event: Event) {
         let value: { [key in Event]: Function[] } = {
             [Event.Message]: [],
             [Event.Raw]: [],
-            [Event.Ready]: []
+            [Event.Ready]: [],
+            [Event.GuildCreate]: []
         };
 
         const getter = function () {
