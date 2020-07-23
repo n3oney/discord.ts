@@ -56,7 +56,6 @@ export default class Guild {
     public verificationLevel?: number;
     public roles?: any[];
 
-    // TODO: Add ban(id: Snowflake) https://discord.com/developers/docs/resources/guild#create-guild-ban
     public ban(id: Snowflake, deleteMessageDays = 0, reason = " "): Promise<void> {
         return new Promise(async (resolve, reject) => {
             if(!this.client.restManager) return reject(new Error("Client isn't connected."));
@@ -65,6 +64,19 @@ export default class Guild {
             }).then(async response => {
                 if(response.status === 200) {
 
+                    resolve();
+                } else reject();
+            }, e => reject(e));
+        })
+    }
+
+    public kick(id: Snowflake): Promise <void> {
+        return new Promise(async (resolve, reject) => {
+            if(!this.client.restManager) return reject(new Error("Client isn't connected."));
+            this.client.restManager.delete("/guilds/" + this.id + "/members/" + id, {
+
+            }).then(async response => {
+                if(response.status === 204) {
                     resolve();
                 } else reject();
             }, e => reject(e));
