@@ -1,5 +1,6 @@
 import Client from "./Client.ts";
 import {Snowflake} from "./Snowflake.ts";
+import GuildMemberCacheManager from "./Cache/GuildMemberCacheManager.ts";
 
 export interface GuildOptions {
     client: Client;
@@ -9,7 +10,6 @@ export interface GuildOptions {
     afkChannelId?: string;
     presences?: any[];
     maxVideoChannelUsers?: number;
-    members?: any[];
     publicUpdatesChannelId?: string;
     premiumSubscriptionCount?: number;
     defaultMessageNotifications?: number;
@@ -20,7 +20,6 @@ export interface GuildOptions {
     region?: string;
     afkTimeout?: number;
     mfaLevel?: number;
-    memberCount?: number;
     ownerId?: string;
     emojis?: any[];
     channels?: any[];
@@ -37,7 +36,6 @@ export default class Guild {
     public afkChannelId?: string;
     public presences?: any[];
     public maxVideoChannelUsers?: number;
-    public members?: any[];
     public publicUpdatesChannelId?: string;
     public premiumSubscriptionCount?: number;
     public defaultMessageNotifications?: number;
@@ -48,34 +46,28 @@ export default class Guild {
     public region?: string;
     public afkTimeout?: number;
     public mfaLevel?: number;
-    public memberCount?: number;
     public ownerId?: string;
     public emojis?: any[];
     public channels?: any[];
     public unavailable: boolean = true;
     public verificationLevel?: number;
     public roles?: any[];
+    public members: GuildMemberCacheManager;
 
-    public ban(id: Snowflake, deleteMessageDays = 0, reason = " "): Promise<void> {
+    public ban(id: Snowflake, deleteMessageDays = 0, reason = ""): Promise<void> {
         return new Promise(async (resolve, reject) => {
-            if(!this.client.restManager) return reject(new Error("Client isn't connected."));
             this.client.restManager.put("/guilds/" + this.id + "/bans/" + id, {
                 deleteMessageDays, reason
             }).then(async response => {
-                if(response.status === 200) {
-
-                    resolve();
-                } else reject();
+                if(response.status === 200) resolve();
+                else reject();
             }, e => reject(e));
         })
     }
 
-    public kick(id: Snowflake): Promise <void> {
+    public kick(id: Snowflake): Promise<void> {
         return new Promise(async (resolve, reject) => {
-            if(!this.client.restManager) return reject(new Error("Client isn't connected."));
-            this.client.restManager.delete("/guilds/" + this.id + "/members/" + id, {
-
-            }).then(async response => {
+            this.client.restManager.delete("/guilds/" + this.id + "/members/" + id).then(async response => {
                 if(response.status === 204) {
                     resolve();
                 } else reject();
@@ -85,7 +77,6 @@ export default class Guild {
 
     public setName(name: string): Promise<Guild> {
         return new Promise(async (resolve, reject) => {
-            if(!this.client.restManager) return reject(new Error("Client isn't connected."));
             this.client.restManager.patch("/guilds/" + this.id, {
                 name
             }).then(async response => {
@@ -107,7 +98,6 @@ export default class Guild {
         this.afkChannelId = options.afkChannelId;
         this.presences = options.presences;
         this.maxVideoChannelUsers = options.maxVideoChannelUsers;
-        this.members = options.members;
         this.publicUpdatesChannelId = options.publicUpdatesChannelId;
         this.premiumSubscriptionCount = options.premiumSubscriptionCount;
         this.defaultMessageNotifications = options.defaultMessageNotifications;
@@ -118,11 +108,12 @@ export default class Guild {
         this.region = options.region;
         this.afkTimeout = options.afkTimeout;
         this.mfaLevel = options.mfaLevel;
-        this.memberCount = options.memberCount;
         this.ownerId = options.ownerId;
         this.emojis = options.emojis;
         this.channels = options.channels;
         this.verificationLevel = options.verificationLevel;
         this.roles = options.roles;
+
+        this.members = new GuildMemberCacheManager(this.client, this);
     }
 }

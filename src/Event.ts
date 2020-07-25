@@ -4,17 +4,21 @@ export enum Event {
     Message = "onMessage",
     Ready = "onReady",
     Raw = "onRaw",
-    GuildCreate = "onGuildCreate"
+    GuildCreate = "onGuildCreate",
+    Http = "onHttp"
 }
+
+export const defaultEventValues = {
+    [Event.Message]: [],
+    [Event.Raw]: [],
+    [Event.Ready]: [],
+    [Event.GuildCreate]: [],
+    [Event.Http]: []
+};
 
 export function event(event: Event) {
     return function (target: Client, propertyKey: string, descriptor: PropertyDescriptor) {
-        let value: { [key in Event]: Function[] } = {
-            [Event.Message]: [],
-            [Event.Raw]: [],
-            [Event.Ready]: [],
-            [Event.GuildCreate]: []
-        };
+        let value: { [key in Event]: Function[] } = defaultEventValues;
 
         const getter = function () {
             return value;

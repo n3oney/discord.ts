@@ -1,27 +1,29 @@
-import {Event} from "./Event.ts";
+import {defaultEventValues, Event} from "./Event.ts";
 import Socket, {Opcode} from "./Socket.ts";
 import User from "./User.ts";
 import RestManager from "./RestManager.ts";
-import CacheManager from "./CacheManager.ts";
 import Guild from "./Guild.ts";
 import {snakeToCamel} from "./Utils.ts";
+import GuildCacheManager from "./Cache/GuildCacheManager.ts";
+import UserCacheManager from "./Cache/UserCacheManager.ts";
 
 class Client {
     private _heartbeatInterval?: number;
     private _s: string | null = null;
-    private _token?: string;
+    private _token?: string; // NOTE - THIS IS THE "STORAGE" FOR THE GETTER AND SETTER FOR THE PUBLIC token - WITH IT WE CAN PREPEND A "Bot "
 
     public user?: User;
     public eventHandlers: { [key in Event]: Function[] };
     public socket?: Socket;
-    public restManager?: RestManager;
-    public guilds = new CacheManager<Guild>();
+    public restManager = new RestManager(this);
+    public guilds = new GuildCacheManager(this);
+    public users = new UserCacheManager(this);
 
-    get token(): string | undefined {
+    public get token(): string | undefined {
         return this._token;
     }
 
-    set token(newVal: string | undefined) {
+    public set token(newVal: string | undefined) {
         if (typeof newVal === "undefined")
             this._token = newVal;
         else if (newVal.startsWith("Bot "))
@@ -68,7 +70,8 @@ class Client {
                     id: message.d.user.id,
                     discriminator: message.d.user.discriminator,
                     bot: message.d.user.bot,
-                    avatar: message.d.user.avatar
+                    avatar: message.d.user.avatar,
+                    client: this
                 });
                 for (let guild of message.d.guilds) {
                     this.guilds.set(guild.id, new Guild({client: this, ...snakeToCamel(guild)}));
@@ -82,21 +85,20 @@ class Client {
         }
     }
 
+    private async _onHttpResponse(res: Response) {
+        this.eventHandlers[Event.Http].forEach(l => l.bind(this)(res));
+    }
+
     async login(token: string) {
         this.token = token;
-        this.restManager = new RestManager(this.token);
         this.socket = new Socket("wss://gateway.discord.gg/?v=6&encoding=json", true);
         this.socket.onMessage(this._onSocketMessage.bind(this));
+        this.restManager.onResponse(this._onHttpResponse.bind(this));
     }
 
     constructor() {
         // @ts-ignore   "Property 'eventHandlers' is used before being assigned." without that.
-        if (!this.eventHandlers || typeof this.eventHandlers === "undefined") this.eventHandlers = {
-            [Event.Message]: [],
-            [Event.Raw]: [],
-            [Event.Ready]: [],
-            [Event.GuildCreate]: []
-        };
+        if (!this.eventHandlers || typeof this.eventHandlers === "undefined") this.eventHandlers = defaultEventValues;
     }
 }
 
